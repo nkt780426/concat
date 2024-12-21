@@ -317,7 +317,7 @@ class EmbeddingNet_Concat(nn.Module):
         return x
     
 
-class TripletNet_Concat_V2(nn.Module):
+class TripletNet_Concat(nn.Module):
     def __init__(self, embedding_net):
         super(TripletNet_Concat_V2, self).__init__()
         self.embedding_net = embedding_net
