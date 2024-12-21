@@ -319,7 +319,7 @@ class EmbeddingNet_Concat(nn.Module):
 
 class TripletNet_Concat(nn.Module):
     def __init__(self, embedding_net):
-        super(TripletNet_Concat_V2, self).__init__()
+        super(TripletNet_Concat, self).__init__()
         self.embedding_net = embedding_net
 
     def forward(self, X):
