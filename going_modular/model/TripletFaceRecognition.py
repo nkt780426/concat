@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from .backbone.iresnet import iresnet18, iresnet34
 
 
@@ -318,9 +317,9 @@ class EmbeddingNet_Concat(nn.Module):
         return x
     
 
-class TripletNet_Concat(nn.Module):
+class TripletNet_Concat_V2(nn.Module):
     def __init__(self, embedding_net):
-        super(TripletNet_Concat, self).__init__()
+        super(TripletNet_Concat_V2, self).__init__()
         self.embedding_net = embedding_net
 
     def forward(self, X):
@@ -338,16 +337,15 @@ class TripletNet_Concat(nn.Module):
     
         
 ## Code Hoang
-
 class EmbeddingNet_Concat_V2(nn.Module):
-    def __init__(self, num_classes=1000):
-        super(EmbeddingNet_Concat, self).__init__()
+    def __init__(self, conf):
+        super(EmbeddingNet_Concat_V2, self).__init__()
         # Load pre-trained ResNet models
-        self.resnet1 = iresnet18()
-        self.resnet2 = iresnet18()
-        self.resnet3 = iresnet34()
-        self.last_bn = nn.BatchNorm1d(1536, eps=0.001, momentum=0.1, affine=True, track_running_stats=True)
-        self.logits = nn.Linear(1536, num_classes, bias=True)
+        self.resnet1 = iresnet18(num_classes=conf['embedding_size'])
+        self.resnet2 = iresnet18(num_classes=conf['embedding_size'])
+        self.resnet3 = iresnet34(num_classes=conf['embedding_size'])
+        self.last_bn = nn.BatchNorm1d(3*conf['embedding_size'], eps=0.001, momentum=0.1, affine=True, track_running_stats=True)
+        self.logits = nn.Linear(3*conf['embedding_size'], conf['embedding_size'], bias=True)
         
     def forward(self, X):
         normalmap_tensors = X[:, 0, :, :]
@@ -378,7 +376,7 @@ class EmbeddingNet_Concat_V2(nn.Module):
     
 class TripletNet_Concat_V2(nn.Module):
     def __init__(self, embedding_net):
-        super(TripletNet_Concat, self).__init__()
+        super(TripletNet_Concat_V2, self).__init__()
         self.embedding_net = embedding_net
 
     def forward(self, X):

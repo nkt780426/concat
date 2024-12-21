@@ -1,15 +1,15 @@
 albedo: https://drive.google.com/file/d/1EA2M-IUbUHXZ1KrGL3G0fhdoqr57k9Qd/view?usp=sharing
 
-- albedo: xong
+- albedo: iresnet18 - thiếu notebook
 
-- depthmap: iresnet50(đang train Sullyvan)
+- normalmap: iresnet34 (đang train ngonluahoangkim), iresnet50(không cần train)
 
-- normalmap: iresnet34 (đang train ngonluahoangkim), iresnet50
-
-- concat: lâm (chưa train), hoàng (backbone), hoàng (data augumentation)
+- concat: lâm (BlueEyeWhiteDragon), hoàng (backbone), hoàng (data augumentation)
 
 train lại với 299 epoch
 
 Up các checkpoint lên google drive
 
-Rảnh Blue-Eye-weight-dragon
+concat_github: https://github.com/nkt780426/concat.git
+
+checkpoint_drive: https://drive.google.com/drive/folders/111XLjyrsaLIAu4BsW8ZhLa68vnWLDLnH?usp=sharing

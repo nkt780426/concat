@@ -266,13 +266,20 @@ class TripletDatasetConcat(Dataset):
 # Concat Hoang
 class CustomExrDatasetConCatV2(Dataset):
     
-    # Data_dir1: NormalMap, data_dir2:Albedo
-    def __init__(self, data_dir1:str, data_dir2:str, data_dir3:str, transform):
-        self.normal_paths = list(Path(data_dir1).glob("*/*.exr"))
-        self.albedo_paths = list(Path(data_dir2).glob("*/*.exr"))
-        self.depth_paths = list(Path(data_dir3).glob("*/*.exr"))
+    def __init__(self, data_dir: str, transform, train=True):
+        split = 'train' if train else 'test'
+        self.normal_dir = Path(data_dir, 'Normal_Map', split)
+        self.albedo_dir = Path(data_dir, 'Albedo', split)
+        self.depth_dir = Path(data_dir, 'Albedo', split)
+        self.normal_paths = sorted(list(self.normal_dir.glob("*/*.exr")))
+        self.albedo_paths = sorted(list(self.albedo_dir.glob("*/*.exr")))
+        self.depth_paths = sorted(list(self.albedo_dir.glob("*/*.exr")))
+        
+        if len(self.normal_paths) != len(self.albedo_paths) != len(self.depth_dir):
+            raise ValueError("Mismatch in number of files between Normal_Map and Albedo directories.")
+
         self.transform = transform
-        self.classes = sorted(os.listdir(data_dir1))
+        self.classes = sorted(os.listdir(self.normal_dir))
         
     def __len__(self):
         return len(self.normal_paths)
@@ -300,10 +307,7 @@ class CustomExrDatasetConCatV2(Dataset):
     def __load_numpy_image(self, index:int):
         normalmap = cv2.imread(self.normal_paths[index], cv2.IMREAD_UNCHANGED)
         albedo = cv2.imread(self.albedo_paths[index], cv2.IMREAD_UNCHANGED)
-        depthmap = cv2.imread(self.depthmap_paths[index], cv2.IMREAD_UNCHANGED)
-        
-        if normalmap is None:
-            raise ValueError(f"Failed to load image at {self.normal_paths[index]}")
+        depthmap = cv2.imread(self.depth_paths[index], cv2.IMREAD_UNCHANGED)
         
         normalmap = cv2.cvtColor(normalmap, cv2.COLOR_BGR2RGB)
         albedo = cv2.cvtColor(albedo, cv2.COLOR_GRAY2RGB)
@@ -380,18 +384,18 @@ class TripletDatasetConcatV2(Dataset):
         img9 = cv2.cvtColor(cv2.imread(img3_path[2], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2BGR)
 
         if self.transform is not None:
-            transformed = self.transform(image=img1, depthmap=img2, normalmap=img3)
+            transformed = self.transform(image=img1, albedo=img2, depthmap=img3)
             img1 = transformed['image']
-            img2 = transformed['depthmap']
-            img3 = transformed['normalmap']
-            transformed = self.transform(image=img4, depthmap=img5, normalmap=img6)
+            img2 = transformed['albedo']
+            img3 = transformed['depthmap']
+            transformed = self.transform(image=img4, albedo=img5, depthmap=img6)
             img4 = transformed['image']
-            img5 = transformed['depthmap']
-            img6 = transformed['normalmap']
-            transformed = self.transform(image=img7, depthmap=img8, normalmap=img9)
+            img5 = transformed['albedo']
+            img6 = transformed['depthmap']
+            transformed = self.transform(image=img7, albedo=img8, depthmap=img9)
             img7 = transformed['image']
-            img8 = transformed['depthmap']
-            img9 = transformed['normalmap']
+            img8 = transformed['albedo']
+            img9 = transformed['depthmap']
         
         X = torch.stack((
             torch.from_numpy(img1).permute(2,0,1), 
