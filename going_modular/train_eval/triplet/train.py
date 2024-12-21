@@ -28,7 +28,7 @@ def fit(
     early_max_stopping: MultiMetricEarlyStopping,
     model_checkpoint: ModelCheckpoint,
 ):
-    log_dir = os.path.abspath(conf['checkpoint_dir']+ conf['type'] + '/logs')
+    log_dir = os.path.abspath(conf['data_dir']+ conf['type'] + '/logs')
     writer = SummaryWriter(log_dir=log_dir)
     
     for epoch in range(start_epoch, epochs):
