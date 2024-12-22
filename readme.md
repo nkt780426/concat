@@ -1,4 +1,4 @@
-- concat: lâm , hoàng (Sullyvan)
+- concat: lâm(Sullyvan-lỗi), hoàng-data (Blue-Eye_White_dragon) - Kết quả ngon nhất
 
 concat_github: https://github.com/nkt780426/concat.git
 
