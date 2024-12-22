@@ -99,7 +99,7 @@ def train_epoch(
             losses.append(loss.item())
             train_loss += loss.item()
         except Exception as e:
-            print(f"Error in batch {i+1}: {e}")
+            print(f"Train Error in batch {i+1}: {e}")
             break
 
     train_loss /= len(triplet_train_loader)
@@ -130,7 +130,7 @@ def test_epoch(
                 test_loss += loss.item()
                 
             except Exception as e:
-                print(f"Error in batch {i+1}: {e}")
+                print(f"Test rrror in batch {i+1}: {e}")
                 break
 
         test_loss /= len(triplet_test_loader)
