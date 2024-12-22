@@ -1,6 +1,4 @@
 import torch
-
-import torch
 from torch.nn import Module
 from torch.utils.data import DataLoader
 from torch.optim import Optimizer
@@ -25,11 +23,12 @@ def fit(
     device:str, 
     roc_train_loader: DataLoader, 
     roc_test_loader: DataLoader,
-    early_max_stopping: MultiMetricEarlyStopping,
+    early_stopping: MultiMetricEarlyStopping,
     model_checkpoint: ModelCheckpoint,
 ):
     log_dir = os.path.abspath(conf['checkpoint_dir']+ conf['type'] + '/logs')
     writer = SummaryWriter(log_dir=log_dir)
+    model.to(device)
     
     for epoch in range(start_epoch, epochs):
         scheduler.step()
@@ -66,10 +65,12 @@ def fit(
         process.display()
         
         model_checkpoint(model, optimizer, epoch + 1)
-        early_max_stopping([test_cosine_auc, test_euclidean_auc], model, epoch+1)
+        early_stopping([test_cosine_auc, test_euclidean_auc], model, epoch + 1)
         
         # if early_max_stopping.early_stop and early_min_stopping.early_stop:
         #     break
+
+    writer.close()
 
 
 def train_epoch(
@@ -90,9 +91,7 @@ def train_epoch(
 
             anchors, positives, negatives = model(X)
 
-            loss_outputs = criterion(anchors, positives, negatives)
-
-            loss = loss_outputs[0] if type(loss_outputs) in (tuple, list) else loss_outputs
+            loss = criterion(anchors, positives, negatives)
 
             loss.backward()
 
@@ -119,17 +118,20 @@ def test_epoch(
         model.eval()
         test_loss = 0
         
-        for X in triplet_test_loader:
+        for i, X in enumerate(triplet_test_loader):
+            try: 
             
-            X = X.to(device)
-            
-            anchors, positives, negatives = model(X)
+                X = X.to(device)
+                
+                anchors, positives, negatives = model(X)
 
-            loss_outputs = criterion(anchors, positives, negatives)
-            
-            loss = loss_outputs[0] if type(loss_outputs) in (tuple, list) else loss_outputs
-            
-            test_loss += loss.item()
+                loss = criterion(anchors, positives, negatives)
+                
+                test_loss += loss.item()
+                
+            except Exception as e:
+                print(f"Error in batch {i+1}: {e}")
+                break
 
         test_loss /= len(triplet_test_loader)
         
