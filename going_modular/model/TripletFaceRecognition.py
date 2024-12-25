@@ -24,10 +24,11 @@ class TripletNet(nn.Module):
     def get_embedding(self, x):
         return self.embedding_net(x)
     
-## Concat backbone
-class EmbeddingNet_Concat(nn.Module):
+    
+## Concat 2 type data: Lam
+class EmbeddingNetConcat(nn.Module):
     def __init__(self, conf):
-        super(EmbeddingNet_Concat, self).__init__()
+        super(EmbeddingNetConcat, self).__init__()
         # Load pre-trained ResNet models
         self.resnet1 = EmbeddingNet(conf['embedding_size'])
         self.resnet2 = EmbeddingNet(conf['embedding_size'])
@@ -50,30 +51,64 @@ class EmbeddingNet_Concat(nn.Module):
         
         return x
     
-
-class TripletNet_Concat(nn.Module):
+        
+## Concat 2 type of data
+class EmbeddingNetConcatV2(nn.Module):
+    def __init__(self, conf):
+        super(EmbeddingNetConcatV2, self).__init__()
+        # Load pre-trained ResNet models
+        self.resnet1 = iresnet18(num_classes=conf['embedding_size']) if 'backbone1' == 'iresnet18' else iresnet34(num_classes=conf['embedding_size'])
+        self.resnet2 = iresnet18(num_classes=conf['embedding_size']) if 'backbone2' == 'iresnet18' else iresnet34(num_classes=conf['embedding_size'])
+        self.last_bn = nn.BatchNorm1d(2*conf['embedding_size'], eps=0.001, momentum=0.1, affine=True, track_running_stats=True)
+        self.logits = nn.Linear(2*conf['embedding_size'], conf['embedding_size'], bias=True)
+        
+    def forward(self, X):
+        type_1_tensors = X[:, 0, :, :]
+        type_2_tensors = X[:, 1, :, :]
+        
+        # Forward pass for the first image
+        type_1_feature = self.resnet1(type_1_tensors)
+        type_1_feature = torch.flatten(type_1_feature, 1)
+        
+        type_2_feature = self.resnet2(type_2_tensors)
+        type_2_feature = torch.flatten(type_2_feature, 1)   
+        
+        # Concatenate the outputs
+        x = torch.cat((type_1_feature, type_2_feature), dim=1)
+        
+        # Apply batch normalization
+        x = self.last_bn(x)
+        
+        # Final logits
+        x = self.logits(x)
+        
+        return x
+    
+    
+class TripletNetConcatV2(nn.Module):
     def __init__(self, embedding_net):
-        super(TripletNet_Concat, self).__init__()
+        super(TripletNetConcatV2, self).__init__()
         self.embedding_net = embedding_net
 
     def forward(self, X):
-        anchor_tensor = X[:, 0:2, :, :]
-        positive_tensor = X[:, 2:4, :, :]
-        negative_tensor = X[:, 4:6, :, :]
+        anchor_tensors = X[:, 0:2, :, :]
+        positive_tensors = X[:, 2:4, :, :]
+        negative_tensors = X[:, 4:6, :, :]
         
-        output1 = self.embedding_net(anchor_tensor)
-        output2 = self.embedding_net(positive_tensor)
-        output3 = self.embedding_net(negative_tensor)
-        return output1, output2, output3
+        anchors = self.embedding_net(anchor_tensors)
+        positives = self.embedding_net(positive_tensors)
+        negatives = self.embedding_net(negative_tensors)
+        
+        return anchors, positives, negatives
 
-    def get_embedding(self, X):
-        return self.embedding_net(X)
-    
-        
-## Code Hoang
-class EmbeddingNet_Concat_V2(nn.Module):
+    def get_embedding(self, x):
+        return self.embedding_net(x)
+
+
+# Concat 3 type of data
+class EmbeddingNetConcatV3(nn.Module):
     def __init__(self, conf):
-        super(EmbeddingNet_Concat_V2, self).__init__()
+        super(EmbeddingNetConcatV3, self).__init__()
         # Load pre-trained ResNet models
         self.resnet1 = iresnet18(num_classes=conf['embedding_size'])
         self.resnet2 = iresnet18(num_classes=conf['embedding_size'])
@@ -108,9 +143,9 @@ class EmbeddingNet_Concat_V2(nn.Module):
         return x
     
     
-class TripletNet_Concat_V2(nn.Module):
+class TripletNetConcatV3(nn.Module):
     def __init__(self, embedding_net):
-        super(TripletNet_Concat_V2, self).__init__()
+        super(TripletNetConcatV3, self).__init__()
         self.embedding_net = embedding_net
 
     def forward(self, X):

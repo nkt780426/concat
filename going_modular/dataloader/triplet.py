@@ -263,8 +263,142 @@ class TripletDatasetConcat(Dataset):
         return X
 
 
-# Concat Hoang
+# Concat 2 type of data
 class CustomExrDatasetConCatV2(Dataset):
+    
+    def __init__(self, data_dir_1: str, type_1: str, data_dir_2: str, type_2: str, transform, train=True):
+        split = 'train' if train else 'test'
+        self.data_dir_1 = Path(data_dir_1, split)
+        self.data_dir_2 = Path(data_dir_2, split)
+        self.type_1_paths = sorted(list(self.data_dir_1.glob("*/*.exr")))
+        self.type_2_paths = sorted(list(self.data_dir_2.glob("*/*.exr")))
+        
+        if len(self.type_1_paths) != len(self.type_2_paths):
+            raise ValueError(f"Mismatch in number of files between {data_dir_1} and {data_dir_2} directories.")
+
+        self.type_1 = type_1
+        self.type_2 = type_2
+        self.transform = transform
+        self.classes = sorted(os.listdir(self.data_dir_1))
+        
+    def __len__(self):
+        return len(self.type_1_paths)
+    
+    # Nhận vào index mà dataloader muốn lấy
+    def __getitem__(self, index:int) -> Tuple[torch.Tensor, int]:
+        numpy_image_1, numpy_image_2 = self.__load_numpy_images(index)
+        label = self.type_1_paths[index].parent.name
+        label_index = self.classes.index(label)
+        
+        if self.transform is not None:
+            transformed = self.transform(image=numpy_image_1, image_1=numpy_image_2)
+            numpy_image_1 = transformed['image']
+            numpy_image_2 = transformed['image_1']
+            
+        X = torch.stack((
+            torch.from_numpy(numpy_image_1).permute(2,0,1), 
+            torch.from_numpy(numpy_image_2).permute(2,0,1), 
+        ), dim=0)
+        
+        return X, label_index  
+        
+    def __load_numpy_images(self, index:int):
+        image_1 = cv2.imread(self.type_1_paths[index], cv2.IMREAD_UNCHANGED)
+        image_2 = cv2.imread(self.type_2_paths[index], cv2.IMREAD_UNCHANGED)
+        
+        image_1 = cv2.cvtColor(image_1, cv2.COLOR_GRAY2RGB) if self.type_1 in ['albedo, depthmap'] else cv2.cvtColor(image_1, cv2.COLOR_BGR2RGB)
+        image_2 = cv2.cvtColor(image_2, cv2.COLOR_GRAY2RGB) if self.type_2 in ['albedo, depthmap'] else cv2.cvtColor(image_2, cv2.COLOR_BGR2RGB)
+        
+        return image_1, image_2
+
+
+class TripletDatasetConcatV2(Dataset):
+    def __init__(self, data_dir_1: str, type_1: str, data_dir_2: str, type_2: str, transform=None, train=True):
+        split = 'train' if train else 'test'
+        self.data_dir_1 = os.path.join(data_dir_1, split)
+        self.data_dir_2 = os.path.join(data_dir_2, split)
+        self.transform = transform
+        self.train = train
+        self.type_1 = type_1
+        self.type_2 = type_2
+
+        self.image_paths = []
+        self.labels = []
+
+        for label in os.listdir(self.data_dir_1):
+            type_1_id_path = os.path.join(self.data_dir_1, label)
+            type_2_id_path = os.path.join(self.data_dir_2, label)
+            for image_name in os.listdir(type_1_id_path):
+                type_1_path = os.path.join(type_1_id_path, image_name)
+                type_2_path = os.path.join(type_2_id_path, image_name)
+                self.image_paths.append((type_1_path, type_2_path))
+                self.labels.append(int(label))
+                    
+        self.labels = np.array(self.labels)
+        self.labels_set = set(self.labels)
+        self.label_to_indices = {label: np.where(self.labels == label)[0]
+                                 for label in self.labels_set}
+        if not self.train:
+            random_state = np.random.RandomState(29)
+
+            self.test_triplets = [[i,
+                                   random_state.choice(self.label_to_indices[self.labels[i]]),
+                                   random_state.choice(self.label_to_indices[
+                                       np.random.choice(list(self.labels_set - set([self.labels[i]])))
+                                   ])
+                                  ]
+                                 for i in range(len(self.image_paths))]
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, index):
+        if self.train:
+            img1_path = self.image_paths[index]
+            label1 = self.labels[index]
+            positive_index = index
+            while positive_index == index:
+                positive_index = np.random.choice(self.label_to_indices[label1])
+            negative_label = np.random.choice(list(self.labels_set - set([label1])))
+            negative_index = np.random.choice(self.label_to_indices[negative_label])
+            img2_path = self.image_paths[positive_index]
+            img3_path = self.image_paths[negative_index]
+        else:
+            img1_path = self.image_paths[self.test_triplets[index][0]]
+            img2_path = self.image_paths[self.test_triplets[index][1]]
+            img3_path = self.image_paths[self.test_triplets[index][2]]
+
+        img1 = cv2.cvtColor(cv2.imread(img1_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2RGB) if self.type_1 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
+        img2 = cv2.cvtColor(cv2.imread(img1_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2BGR) if self.type_2 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
+        img3 = cv2.cvtColor(cv2.imread(img2_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2RGB) if self.type_1 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
+        img4 = cv2.cvtColor(cv2.imread(img2_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2BGR) if self.type_2 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
+        img5 = cv2.cvtColor(cv2.imread(img3_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2RGB) if self.type_1 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
+        img6 = cv2.cvtColor(cv2.imread(img3_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2BGR) if self.type_2 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
+
+        if self.transform is not None:
+            transformed = self.transform(image=img1, image_1=img2)
+            img1 = transformed['image']
+            img2 = transformed['image_1']
+            transformed = self.transform(image=img3, image_1=img4)            
+            img3 = transformed['image']
+            img4 = transformed['image_1']
+            transformed = self.transform(image=img5, image_1=img6)
+            img5 = transformed['image']
+            img6 = transformed['image_1']
+        
+        X = torch.stack((
+            torch.from_numpy(img1).permute(2,0,1), 
+            torch.from_numpy(img2).permute(2,0,1), 
+            torch.from_numpy(img3).permute(2,0,1),
+            torch.from_numpy(img4).permute(2,0,1), 
+            torch.from_numpy(img5).permute(2,0,1), 
+            torch.from_numpy(img6).permute(2,0,1),
+        ), dim=0)
+        
+        return X
+    
+# Concat 3 type of data
+class CustomExrDatasetConCatV3(Dataset):
     
     def __init__(self, data_dir: str, transform, train=True):
         split = 'train' if train else 'test'
@@ -316,7 +450,7 @@ class CustomExrDatasetConCatV2(Dataset):
         return normalmap, albedo, depthmap
 
 
-class TripletDatasetConcatV2(Dataset):
+class TripletDatasetConcatV3(Dataset):
     def __init__(self, data_dir, transform=None, train=True):
         split = 'train' if train else 'test'
         self.normalmap_dir = os.path.join(data_dir, 'Normal_Map', split)
