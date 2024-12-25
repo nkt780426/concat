@@ -57,8 +57,8 @@ class EmbeddingNetConcatV2(nn.Module):
     def __init__(self, conf):
         super(EmbeddingNetConcatV2, self).__init__()
         # Load pre-trained ResNet models
-        self.resnet1 = iresnet18(num_classes=conf['embedding_size']) if 'backbone1' == 'iresnet18' else iresnet34(num_classes=conf['embedding_size'])
-        self.resnet2 = iresnet18(num_classes=conf['embedding_size']) if 'backbone2' == 'iresnet18' else iresnet34(num_classes=conf['embedding_size'])
+        self.resnet1 = iresnet18(num_classes=conf['embedding_size']) if conf['backbone1'] == 'iresnet18' else iresnet34(num_classes=conf['embedding_size'])
+        self.resnet2 = iresnet18(num_classes=conf['embedding_size']) if conf['backbone2'] == 'iresnet18' else iresnet34(num_classes=conf['embedding_size'])
         self.last_bn = nn.BatchNorm1d(2*conf['embedding_size'], eps=0.001, momentum=0.1, affine=True, track_running_stats=True)
         self.logits = nn.Linear(2*conf['embedding_size'], conf['embedding_size'], bias=True)
         

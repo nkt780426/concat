@@ -369,11 +369,11 @@ class TripletDatasetConcatV2(Dataset):
             img3_path = self.image_paths[self.test_triplets[index][2]]
 
         img1 = cv2.cvtColor(cv2.imread(img1_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2RGB) if self.type_1 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
-        img2 = cv2.cvtColor(cv2.imread(img1_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2BGR) if self.type_2 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
-        img3 = cv2.cvtColor(cv2.imread(img2_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2RGB) if self.type_1 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
-        img4 = cv2.cvtColor(cv2.imread(img2_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2BGR) if self.type_2 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
-        img5 = cv2.cvtColor(cv2.imread(img3_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2RGB) if self.type_1 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
-        img6 = cv2.cvtColor(cv2.imread(img3_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2BGR) if self.type_2 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
+        img2 = cv2.cvtColor(cv2.imread(img1_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2RGB) if self.type_2 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img1_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
+        img3 = cv2.cvtColor(cv2.imread(img2_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2RGB) if self.type_1 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img2_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
+        img4 = cv2.cvtColor(cv2.imread(img2_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2RGB) if self.type_2 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img2_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
+        img5 = cv2.cvtColor(cv2.imread(img3_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2RGB) if self.type_1 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img3_path[0], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
+        img6 = cv2.cvtColor(cv2.imread(img3_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_GRAY2RGB) if self.type_2 in ['albedo', 'depthmap'] else cv2.cvtColor(cv2.imread(img3_path[1], cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
 
         if self.transform is not None:
             transformed = self.transform(image=img1, image_1=img2)
