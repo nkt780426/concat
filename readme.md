@@ -23,3 +23,9 @@ max: 1e-6, min 1e-7
 Kịch bản đã thử nghiệm
 - concat 2 model, concat 3.
     +) 
+
+ngonluahoangkim:
+- depthmap + normalmap
+blue eye white dragon
+- albedo + depthmap
+115
