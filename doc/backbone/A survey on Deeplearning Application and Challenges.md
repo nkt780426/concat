@@ -169,13 +169,14 @@ Có 3 loại mô hình học sâu là multilayer perceptron, convolutional neura
             - Khả năng mất ổn định trong rất sâu: Dù skip connections giúp giảm thiểu vanishing gradient, việc đào tạo một mạng quá sâu (hơn 152 lớp) vẫn có thể gặp khó khăn trong việc hội tụ do gradient explosion hoặc các vấn đề tối ưu hóa phi tuyến tính khác.
     - DenseNet:
         - Mở rộng ý tưởng của ResNet và HighWay Network bằng cách giới thiệu "kết nối dày đặc" (dense connection).
-        - Mỗi lớp tích chập nhận đầu vào là tất cả các bản đồ đặc trưng từ các lớp trước đó bằng skip connection, tối đa hóa luồng thông tin.
+        - Mỗi lớp tích chập nhận đầu vào là tất cả các feature map từ các lớp trước đó bằng skip connection, tối đa hóa luồng thông tin.
         - Giới thiệu Dense block như hình dưới
 
             ![](images/2.%20Dense%20block.png)
         
             - Bao gồm nhiều CNN layer, mỗi CNN layer sử dụng batch normalization, Relu activation function và 3 x 3 convolution.
             - Có thể thấy Dense block khá tốn kém do số lượng các feature map ngày càng tăng.. Để giảm chi phí tính toán, các khối chuyển tiếp (transition block) được thêm vào. Bản chất mỗi khối là tích chập 1×1 và max-pooling được thêm vào để giảm số chiều không gian (spatial dimention) của feature map.
+            
         - Độ sâu của mạng có thể đạt tối đa 264 layers.
         
     **Các cải tiến giải quyết vấn đề diminishing feature reuse**
