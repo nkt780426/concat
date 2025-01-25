@@ -32,7 +32,7 @@ concat/
 └── README.md
 ```
 
-Dataset download tại ![đây](https://www.kaggle.com/datasets/blueeyewhitedaragon/hoangvn-3dfacerecognition)
+Dataset download tại [đây](https://www.kaggle.com/datasets/blueeyewhitedaragon/hoangvn-3dfacerecognition)
 
 # Cách chạy project
 
