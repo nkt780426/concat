@@ -3,9 +3,6 @@ scipy
 opencv-python
 opencv-python-headless
 matplotlib
-# git+https://github.com/facebookresearch/detectron2.git
-dlib
-open3d
 OpenEXR
 mtcnn[tensorflow]
 tensorflow==2.16.1
@@ -14,4 +11,3 @@ albumentations
 scikit-image
 seaborn
 termcolor
-PyYAML

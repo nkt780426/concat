@@ -3,7 +3,7 @@ import torch.nn as nn
 from .backbone.iceptionresnetv1 import EmbeddingNet
 from .backbone.iresnet import iresnet18, iresnet34
 
-
+# Code Lam
 class TripletNet(nn.Module):
     def __init__(self, embedding_net):
         super(TripletNet, self).__init__()
@@ -51,7 +51,8 @@ class EmbeddingNetConcat(nn.Module):
         
         return x
     
-        
+
+# Code Hoang
 ## Concat 2 type of data
 class EmbeddingNetConcatV2(nn.Module):
     def __init__(self, conf):
